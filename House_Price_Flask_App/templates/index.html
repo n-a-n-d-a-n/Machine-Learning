@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Prediction</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+        }
+
+        /* Fade + slide animation */
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-card {
+            animation: fadeSlide 0.8s ease-out forwards;
+        }
+
+        /* Prediction pulse */
+        @keyframes pulseSoft {
+            0% { transform: scale(0.97); }
+            50% { transform: scale(1); }
+            100% { transform: scale(0.97); }
+        }
+
+        .prediction-animate {
+            animation: pulseSoft 1.5s ease-in-out infinite;
+        }
+
+        /* Button loading */
+        .loading::after {
+            content: " ⏳";
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0% { content: " ⏳"; }
+            33% { content: " ⏳."; }
+            66% { content: " ⏳.."; }
+            100% { content: " ⏳..."; }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center">
+    <main class="bg-white shadow-2xl rounded-xl p-8 w-full max-w-3xl animate-card">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">🏠 House Price Prediction</h1>
+            <p class="text-gray-500">Smart ML-powered price estimation</p>
+        </header>
+
+        <!-- Prediction Result -->
+        {% if prediction_text %}
+        <section class="mb-6 p-4 rounded-lg text-center font-semibold prediction-animate
+                        {% if 'Error' in prediction_text %}
+                            bg-red-100 text-red-700
+                        {% else %}
+                            bg-green-100 text-green-700
+                        {% endif %}">
+            {{ prediction_text }}
+        </section>
+        {% endif %}
+
+        <!-- Form -->
+        <form action="/predict" method="POST" 
+              class="grid grid-cols-1 md:grid-cols-2 gap-6"
+              onsubmit="showLoading()">
+            
+            {% set input_class = "w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition" %}
+
+            <!-- Posted By -->
+            <div>
+                <label for="posted_by" class="block font-medium mb-1">Posted By</label>
+                <select id="posted_by" name="POSTED_BY" required class="{{ input_class }}">
+                    <option value="Owner">Owner</option>
+                    <option value="Dealer">Dealer</option>
+                    <option value="Builder">Builder</option>
+                </select>
+            </div>
+
+            <!-- BHK or RK -->
+            <div>
+                <label for="bhk_or_rk" class="block font-medium mb-1">BHK or RK</label>
+                <select id="bhk_or_rk" name="BHK_OR_RK" required class="{{ input_class }}">
+                    <option value="BHK">BHK</option>
+                    <option value="RK">RK</option>
+                </select>
+            </div>
+
+            <!-- BHK Number -->
+            <div>
+                <label for="bhk_no" class="block font-medium mb-1">Number of BHK</label>
+                <input id="bhk_no" type="number" name="BHK_NO" min="1" required
+                       class="{{ input_class }}" placeholder="e.g. 2">
+            </div>
+
+            <!-- Square Feet -->
+            <div>
+                <label for="square_ft" class="block font-medium mb-1">Area (Sq Ft)</label>
+                <input id="square_ft" type="number" name="SQUARE_FT" min="100" required
+                       class="{{ input_class }}" placeholder="e.g. 1200">
+            </div>
+
+            <!-- Latitude -->
+            <div>
+                <label for="latitude" class="block font-medium mb-1">Latitude</label>
+                <input id="latitude" type="number" step="any" name="LATITUDE" required
+                       class="{{ input_class }}">
+            </div>
+
+            <!-- Longitude -->
+            <div>
+                <label for="longitude" class="block font-medium mb-1">Longitude</label>
+                <input id="longitude" type="number" step="any" name="LONGITUDE" required
+                       class="{{ input_class }}">
+            </div>
+
+            <!-- Under Construction -->
+            <div>
+                <label for="under_construction" class="block font-medium mb-1">Under Construction</label>
+                <select id="under_construction" name="UNDER_CONSTRUCTION" required class="{{ input_class }}">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+
+            <!-- Ready to Move -->
+            <div>
+                <label for="ready_to_move" class="block font-medium mb-1">Ready to Move</label>
+                <select id="ready_to_move" name="READY_TO_MOVE" required class="{{ input_class }}">
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+
+            <!-- Resale -->
+            <div>
+                <label for="resale" class="block font-medium mb-1">Resale</label>
+                <select id="resale" name="RESALE" required class="{{ input_class }}">
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+
+            <!-- RERA -->
+            <div>
+                <label for="rera" class="block font-medium mb-1">RERA Approved</label>
+                <select id="rera" name="RERA" required class="{{ input_class }}">
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="md:col-span-2">
+                <button id="submitBtn" type="submit"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 
+                               text-white font-bold py-3 rounded-lg 
+                               transition transform hover:scale-105">
+                    🔮 Predict Price
+                </button>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-400 text-sm mt-6">
+            Random Forest • Feature Engineered • Cross Validated
+        </footer>
+    </main>
+
+    <!-- Loading Script -->
+    <script>
+        function showLoading() {
+            const btn = document.getElementById("submitBtn");
+            btn.classList.add("loading");
+            btn.disabled = true;
+        }
+    </script>
+</body>
+</html>
