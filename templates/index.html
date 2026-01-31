@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Support Chatbot</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+        }
+
+        .chat-box {
+            height: 420px;
+            overflow-y: auto;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.35s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .typing {
+            font-style: italic;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center">
+
+<main class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6" aria-label="Mental health support chatbot">
+
+    <!-- Header -->
+    <header class="mb-4 text-center">
+        <h1 class="text-2xl font-bold text-slate-800 mb-1">
+            🧠 Mental Health Support Chatbot
+        </h1>
+        <p class="text-gray-500">
+            A safe space to talk. You are not alone.
+        </p>
+    </header>
+
+    <!-- Chat Box -->
+    <section aria-live="polite" aria-label="Chat messages">
+        <div id="chatBox" class="chat-box border rounded-lg p-4 mb-4 bg-gray-50">
+            <!-- Initial bot message -->
+            <div class="fade-in flex justify-start mb-3">
+                <div class="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-xl max-w-[75%]">
+                    Hello 👋 How are you feeling today?
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Input -->
+    <section aria-label="Message input">
+        <form id="chatForm" class="flex gap-2">
+            <label for="message" class="sr-only">Type your message</label>
+            <input
+                type="text"
+                id="message"
+                name="message"
+                placeholder="Type your message..."
+                required
+                autofocus
+                class="flex-1 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                autocomplete="off"
+            />
+            <button
+                type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-lg transition"
+            >
+                Send
+            </button>
+        </form>
+    </section>
+
+</main>
+
+<script>
+    const chatForm = document.getElementById("chatForm");
+    const chatBox = document.getElementById("chatBox");
+    const messageInput = document.getElementById("message");
+
+    chatForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const userMessage = messageInput.value.trim();
+        if (userMessage.length < 2) return;
+
+        // User bubble
+        const userDiv = document.createElement("div");
+        userDiv.className = "fade-in flex justify-end mb-3";
+        userDiv.innerHTML = `
+            <div class="bg-green-100 text-green-800 px-4 py-2 rounded-xl max-w-[75%]">
+                ${userMessage}
+            </div>
+        `;
+        chatBox.appendChild(userDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Typing indicator
+        const typingDiv = document.createElement("div");
+        typingDiv.id = "typing";
+        typingDiv.className = "flex justify-start mb-3 typing";
+        typingDiv.innerHTML = `
+            <div class="bg-gray-200 text-gray-600 px-4 py-2 rounded-xl">
+                Bot is typing...
+            </div>
+        `;
+        chatBox.appendChild(typingDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Send to backend
+        fetch("/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: "message=" + encodeURIComponent(userMessage)
+        })
+        .then(response => response.text())
+        .then(botReply => {
+            const typingEl = document.getElementById("typing");
+            if (typingEl) typingEl.remove();
+
+            const botDiv = document.createElement("div");
+            botDiv.className = "fade-in flex justify-start mb-3";
+            botDiv.innerHTML = `
+                <div class="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-xl max-w-[75%]">
+                    ${botReply}
+                </div>
+            `;
+            chatBox.appendChild(botDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        messageInput.value = "";
+        messageInput.focus();
+    });
+</script>
+
+</body>
+</html>
