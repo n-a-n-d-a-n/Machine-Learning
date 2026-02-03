@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Stress Level Predictor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Anime.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(120deg,#89f7fe,#66a6ff,#a18cd1,#fbc2eb);
+            background-size: 300% 300%;
+            display: flex;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        h2 {
+            text-align: center;
+            color: white;
+            margin-bottom: 4px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #f0f0f0;
+            margin-bottom: 18px;
+            font-size: 13px;
+        }
+
+        /* MAIN GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+        }
+
+        .card {
+            background: white;
+            padding: 14px;
+            border-radius: 14px;
+            box-shadow: 0 14px 26px rgba(0,0,0,0.22);
+            opacity: 0;
+            transform: translateY(25px);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 22px 45px rgba(0,0,0,0.30);
+        }
+
+        .card.active {
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.35),
+                        0 18px 35px rgba(0,0,0,0.25);
+            transform: scale(1.01);
+        }
+
+        /* CARD POSITIONS */
+        .card-1 { grid-column: 1 / span 2; }
+        .card-2 { grid-column: 3 / span 2; }
+        .card-3 { grid-column: 5 / span 2; }
+        .card-4 { grid-column: 2 / span 2; }
+        .card-5 { grid-column: 4 / span 2; }
+
+        .card h4 {
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        /* OPTIONS GRID */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+
+        .opt-1 { grid-column: 1 / span 2; }
+        .opt-2 { grid-column: 3 / span 2; }
+        .opt-3 { grid-column: 5 / span 2; }
+        .opt-4 { grid-column: 2 / span 2; }
+        .opt-5 { grid-column: 4 / span 2; }
+
+        .option-card {
+            padding: 8px;
+            border-radius: 10px;
+            border: 1.5px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+            background: #fafafa;
+            font-weight: 600;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+
+        .option-card:hover {
+            transform: scale(1.08);
+            border-color: #667eea;
+            box-shadow: 0 8px 18px rgba(102,126,234,0.35);
+        }
+
+        .option-card span {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .option-card small {
+            font-size: 10px;
+            color: #666;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        input[type="radio"]:checked + .option-card {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.05);
+            animation: selectPop 0.3s ease;
+        }
+
+        input[type="radio"]:checked + .option-card span,
+        input[type="radio"]:checked + .option-card small {
+            color: white;
+        }
+
+        @keyframes selectPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1.05); }
+        }
+
+        /* BUTTON */
+        button {
+            margin-top: 22px;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 12px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(102,126,234,0.45);
+            background: #5a67d8;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* RESULT */
+        .result {
+            margin-top: 18px;
+            padding: 16px;
+            background: #e6fffa;
+            border-left: 5px solid #38b2ac;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* STRESS METER */
+        .meter {
+            width: 100%;
+            height: 14px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 10px;
+        }
+
+        .meter-fill.low { background: #38b2ac; }
+        .meter-fill.medium { background: #ecc94b; }
+        .meter-fill.high { background: #f56565; }
+
+        /* MOBILE */
+        @media (max-width: 900px) {
+            .grid, .options-grid { grid-template-columns: 1fr; }
+            .card, .opt-1, .opt-2, .opt-3, .opt-4, .opt-5 {
+                grid-column: auto !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Student Stress Level Predictor</h2>
+    <p class="subtitle">Select the option that best describes you</p>
+
+    <form action="/predict" method="post">
+        <div class="grid">
+
+            <!-- SLEEP -->
+            <div class="card card-1">
+                <h4>Sleep Quality 😴</h4>
+                <div class="options-grid">
+                    <input type="radio" name="sleep_quality" id="sq1" value="1" required>
+                    <label class="option-card opt-1" for="sq1"><span>1</span><small>Very Poor</small></label>
+
+                    <input type="radio" name="sleep_quality" id="sq2" value="2">
+                    <label class="option-card opt-2" for="sq2"><span>2</span><small>Poor</small></label>
+
+                    <input type="radio" name="sleep_quality" id="sq3" value="3">
+                    <label class="option-card opt-3" for="sq3"><span>3</span><small>Average</small></label>
+
+                    <input type="radio" name="sleep_quality" id="sq4" value="4">
+                    <label class="option-card opt-4" for="sq4"><span>4</span><small>Good</small></label>
+
+                    <input type="radio" name="sleep_quality" id="sq5" value="5">
+                    <label class="option-card opt-5" for="sq5"><span>5</span><small>Excellent</small></label>
+                </div>
+            </div>
+
+            <!-- HEADACHE -->
+            <div class="card card-2">
+                <h4>Headache Frequency 🤕</h4>
+                <div class="options-grid">
+                    <input type="radio" name="headache_frequency" id="hf1" value="1" required>
+                    <label class="option-card opt-1" for="hf1"><span>1</span><small>Rarely</small></label>
+
+                    <input type="radio" name="headache_frequency" id="hf2" value="2">
+                    <label class="option-card opt-2" for="hf2"><span>2</span><small>Occasional</small></label>
+
+                    <input type="radio" name="headache_frequency" id="hf3" value="3">
+                    <label class="option-card opt-3" for="hf3"><span>3</span><small>Sometimes</small></label>
+
+                    <input type="radio" name="headache_frequency" id="hf4" value="4">
+                    <label class="option-card opt-4" for="hf4"><span>4</span><small>Often</small></label>
+
+                    <input type="radio" name="headache_frequency" id="hf5" value="5">
+                    <label class="option-card opt-5" for="hf5"><span>5</span><small>Very Often</small></label>
+                </div>
+            </div>
+
+            <!-- ACADEMIC -->
+            <div class="card card-3">
+                <h4>Academic Performance 👩‍🎓</h4>
+                <div class="options-grid">
+                    <input type="radio" name="academic_performance" id="ap1" value="1" required>
+                    <label class="option-card opt-1" for="ap1"><span>1</span><small>Very Poor</small></label>
+
+                    <input type="radio" name="academic_performance" id="ap2" value="2">
+                    <label class="option-card opt-2" for="ap2"><span>2</span><small>Below Avg</small></label>
+
+                    <input type="radio" name="academic_performance" id="ap3" value="3">
+                    <label class="option-card opt-3" for="ap3"><span>3</span><small>Average</small></label>
+
+                    <input type="radio" name="academic_performance" id="ap4" value="4">
+                    <label class="option-card opt-4" for="ap4"><span>4</span><small>Good</small></label>
+
+                    <input type="radio" name="academic_performance" id="ap5" value="5">
+                    <label class="option-card opt-5" for="ap5"><span>5</span><small>Excellent</small></label>
+                </div>
+            </div>
+
+            <!-- STUDY LOAD -->
+            <div class="card card-4">
+                <h4>Study Load 📚</h4>
+                <div class="options-grid">
+                    <input type="radio" name="study_load" id="sl1" value="1" required>
+                    <label class="option-card opt-1" for="sl1"><span>1</span><small>Very Light</small></label>
+
+                    <input type="radio" name="study_load" id="sl2" value="2">
+                    <label class="option-card opt-2" for="sl2"><span>2</span><small>Light</small></label>
+
+                    <input type="radio" name="study_load" id="sl3" value="3">
+                    <label class="option-card opt-3" for="sl3"><span>3</span><small>Moderate</small></label>
+
+                    <input type="radio" name="study_load" id="sl4" value="4">
+                    <label class="option-card opt-4" for="sl4"><span>4</span><small>Heavy</small></label>
+
+                    <input type="radio" name="study_load" id="sl5" value="5">
+                    <label class="option-card opt-5" for="sl5"><span>5</span><small>Very Heavy</small></label>
+                </div>
+            </div>
+
+            <!-- EXTRA -->
+            <div class="card card-5">
+                <h4>Extracurricular Activity 🎾</h4>
+                <div class="options-grid">
+                    <input type="radio" name="extracurricular_activity" id="ea1" value="1" required>
+                    <label class="option-card opt-1" for="ea1"><span>1</span><small>Not Active</small></label>
+
+                    <input type="radio" name="extracurricular_activity" id="ea2" value="2">
+                    <label class="option-card opt-2" for="ea2"><span>2</span><small>Rare</small></label>
+
+                    <input type="radio" name="extracurricular_activity" id="ea3" value="3">
+                    <label class="option-card opt-3" for="ea3"><span>3</span><small>Sometimes</small></label>
+
+                    <input type="radio" name="extracurricular_activity" id="ea4" value="4">
+                    <label class="option-card opt-4" for="ea4"><span>4</span><small>Active</small></label>
+
+                    <input type="radio" name="extracurricular_activity" id="ea5" value="5">
+                    <label class="option-card opt-5" for="ea5"><span>5</span><small>Very Active</small></label>
+                </div>
+            </div>
+
+        </div>
+
+        <button type="submit">Predict Stress Level</button>
+    </form>
+
+    {% if prediction %}
+    <div class="result">
+        <strong>Stress Level: {{ stress_label }}</strong>
+        <div class="meter">
+            <div class="meter-fill" data-level="{{ prediction }}"></div>
+        </div>
+        <p>{{ prediction }}/5</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Entry animation
+    anime({
+        targets: '.card',
+        opacity: [0, 1],
+        translateY: [20, 0],
+        delay: anime.stagger(120),
+        duration: 800,
+        easing: 'easeOutExpo'
+    });
+
+    // Background animation
+    anime({
+        targets: 'body',
+        backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+        duration: 20000,
+        easing: 'linear',
+        loop: true
+    });
+
+    // Highlight parent card on option select
+    document.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.addEventListener('change', () => {
+            input.closest('.card').classList.add('active');
+        });
+    });
+
+    // Stress meter animation
+    const meter = document.querySelector('.meter-fill');
+    if (meter) {
+        const level = parseInt(meter.dataset.level);
+        const percent = (level / 5) * 100;
+
+        if (level <= 2) meter.classList.add('low');
+        else if (level === 3) meter.classList.add('medium');
+        else meter.classList.add('high');
+
+        anime({
+            targets: meter,
+            width: percent + '%',
+            duration: 1200,
+            easing: 'easeOutExpo'
+        });
+    }
+</script>
+
+</body>
+</html>
